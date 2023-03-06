@@ -1,0 +1,19 @@
+{
+  "name": "my-vue-handwrite",
+  "version": "1.0.0",
+  "description": "learn vue source code, and handwrite",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "rollup -cw",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "fanxine",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.21.0",
+    "@babel/core": "^7.21.0",
+    "@babel/preset-env": "^7.20.2",
+    "rollup": "^3.18.0"
+  }
+}
