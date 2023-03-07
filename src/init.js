@@ -4,7 +4,8 @@
  * @Description: vue init初始化
  */
 
-import { initState } from "./state.js";
+import { initState }         from "./state.js";
+import { compileToFunction } from "./compile/index.js";
 
 export function initMixin(Vue) {
     Vue.prototype._init = function (options) {
@@ -14,5 +15,26 @@ export function initMixin(Vue) {
 
         // 初始化状态
         initState(vm);
+
+
+        // 挂载模板
+        if(options.el){
+            vm.$mount(options.el);
+        }
+    }
+
+    Vue.prototype.$mount = function (el) {
+        const vm = this;
+        const opts = vm.$options;
+        const queryEl = document.querySelector(el);
+
+        // 如果没有render函数
+        if(!opts.render){
+            const template = opts.template || queryEl.outerHTML;
+            if(template){
+                const render = compileToFunction(template);
+                opts.render = render;
+            }
+        }
     }
 }

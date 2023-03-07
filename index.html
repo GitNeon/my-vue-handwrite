@@ -5,6 +5,10 @@
   <title>Vue</title>
 </head>
 <body>
+  <div id="app">
+    <span style="color: red">{{ name }}</span>
+    <span>{{ age }}</span>
+  </div>
   <script src="dist/bundle.vue.js"></script>
   <script>
     const vm = new Vue({
@@ -18,15 +22,10 @@
                 },
                 hobby: ['sleep', 'play', 'eat', { a: 1 }]
             }
-        }
+        },
+        el: '#app',
     });
 
-    console.log(vm);
-    vm.hobby[3].a = 2;
-
-    vm.hobby.push({
-        test: '222'
-    });
   </script>
 </body>
 </html>
