@@ -151,12 +151,12 @@ function parseHTML(html) {
         }
     }
 
-    console.log(html);
-    console.log(root)
+    return root;
 }
 
 export function compileToFunction(template) {
     // 解析成ast语法树
     const ast = parseHTML(template);
+    console.log('ast', ast);
     return ''
 }
