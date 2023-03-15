@@ -24,7 +24,7 @@ const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s
 const defaultTagRE = /\{\{((?:.|\r?\n)+?)}}/g;
 
 // 解析模板
-function parseHTML(html) {
+export function parseHTML(html) {
 
     // 元素类型
     const ELEMENT_TYPE = 1;
