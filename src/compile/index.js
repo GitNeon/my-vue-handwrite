@@ -3,160 +3,117 @@
  * @Date: 2023年03月06日 18:18
  * @Description: 编译相关
  */
-
-// 标签名
-const ncname = '[a-zA-Z_][\\-\\.0-9_a-zA-Z]*';
-const qnameCapture = "((?:" + ncname + ":)?" + ncname + ")";
-
-// 匹配 头标签的 前半部分。当字符串开头是 头标签时，可以匹配 例如 <div
-const startTagOpen = new RegExp(("^<" + qnameCapture));
-
-// 匹配 头标签的 右尖括号。当字符串开头是 > 时，可以匹配 例如： >
-const startTagClose = /^\s*(\/?)>/;
-
-// 匹配结束标签名， 例如 </div>, <br/>
-const endTag = new RegExp(("^</" + qnameCapture + "[^>]*>"));
-
-// 匹配标签上的属性。key="value"
-const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/;
+import { parseHTML } from "./parse.js";
 
 // 匹配mustache， 例如{{ name }}
 const defaultTagRE = /\{\{((?:.|\r?\n)+?)}}/g;
 
-// 解析模板
-export function parseHTML(html) {
+// 文本节点的处理
+export function genTextNode(text){
 
-    // 元素类型
-    const ELEMENT_TYPE = 1;
-    // 文本类型
-    const TEXT_TYPE = 3;
-    // 用于存放元素的栈
-    const stack = [];
-    // 当前父节点
-    let currentParent;
-    // 根节点
-    let root;
-
-    const creatASTObject = (tag, attrs) => {
-        return {
-            tag,
-            attrs: attrs || [],
-            parent: null,
-            children: [],
-            type: ELEMENT_TYPE
-        }
+    // 如果不是{{ ... }}形式的内容，直接返回原文本
+    if(!defaultTagRE.test(text)){
+        return `'${text}'`
     }
 
-    // 开始内容
-    const saveStart = (content) => {
-        const { tagName, attrs } = content;
-        const node = creatASTObject(tagName, attrs);
-        // 如果没有根节点，那么就保存根节点
-        if(!root){
-            root = node;
+    // 不断的去匹配当前字符串中含有{{...}}形式的内容
+    defaultTagRE.lastIndex = 0;
+    // 当前匹配结果
+    let match;
+    // 匹配结果的最后索引位置
+    let lastIndex = 0;
+    // 顺序放好文本内容
+    const words = [];
+    while(match  = defaultTagRE.exec(text)){
+        console.log('match:', match)
+        const index = match.index;
+
+        if(index > lastIndex){
+            words.push(`'${text.slice(lastIndex, index)}'`)
         }
-        // 下一次node的parent指向已保存的父节点
-        if(currentParent){
-            node.parent = currentParent;
-            // 父节点的children要保存当前子节点
-            currentParent.children.push(node);
-        }
-        // 保存当前父节点
-        currentParent = node;
-        // 栈中存放当前节点
-        stack.push(node);
+        words.push(`_s('${match[1].trim()}')`);
+        lastIndex = match.index + match[0].length;
     }
-    // 文本内容
-    const saveText = (content) => {
-        content = content.replace(/\s/g, '');
-        if(content){
-            currentParent.children.push({
-                type: TEXT_TYPE,
-                content,
-                parent: currentParent
-            })
-        }
+    if(lastIndex < text.length){
+        words.push(`'${text.slice(lastIndex)}'`)
     }
-    // 结束内容
-    const saveEnd = (content) => {
-        // 该标签已结束，出栈
-        stack.pop();
-        currentParent = stack[stack.length - 1];
-    }
-
-    // 当html被解析过时，不断减小字符串
-    const advance = (length) => {
-        html = html.substring(length);
-    }
-
-    // 解析开始标签
-    const parseStartTag = () => {
-        const start = html.match(startTagOpen);
-        // 如果是开始标签
-        if ( start ) {
-            // 保存开始标签中的信息
-            const tagInfo = {
-                tagName: start[1],
-                attrs: []
-            };
-
-            advance(start[0].length);
-            // 处理属性
-            let attr, end;
-            // 当匹配到的是属性并且不是结束位置
-            while ( !(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
-                tagInfo.attrs.push({
-                    name: attr[1],
-                    value: attr[3] || attr[4] || attr[5]
-                })
-
-                advance(attr[0].length)
-            }
-
-            // 把结束标签的右尖角号删除
-            if(end){
-                advance(end[0].length)
-            }
-
-            return tagInfo;
-        }
-    }
-
-    while (html) {
-        let textEnd = html.indexOf('<');
-        // 如果为0，说明是开始标签的尖角号<
-        if ( textEnd === 0 ) {
-            // 解析开始标签和属性
-            const startTagResult = parseStartTag(html);
-            saveStart(startTagResult)
-            continue;
-        }
-
-
-        // 大于0，说明是文本
-        if ( textEnd > 0 ) {
-            // 获取文本内容
-            const text = html.substring(0, textEnd);
-            if(text){
-                saveText(text)
-            }
-            advance(text.length);
-        }
-
-        // 如果是结束标签
-        let tagEndMatch = html.match(endTag);
-        if(tagEndMatch){
-            saveEnd(tagEndMatch[0]);
-            advance(tagEndMatch[0].length);
-        }
-    }
-
-    return root;
+    return `_v(${words.join('+')})`
 }
 
+// 生成children
+export function genChildren(children){
+    if(children && children.length){
+        let result = ``;
+        children.forEach((item) => {
+            // 判断节点类型,元素类型：1， 文本类型：3
+            const nodeType = item.type.toString();
+            if(nodeType === '1'){
+                result += ',' + genRenderCode(item);
+            }else if(nodeType === '3'){
+                result += ',' + genTextNode(item.content);
+            }
+        })
+        return result;
+    }
+    return ''
+}
+
+// 将attrs属性转换成对象形式的props属性
+export function genProps(attrs){
+    const props = {};
+    if(attrs && attrs.length){
+        attrs.forEach((item) => {
+            // 对style样式进行处理
+            if(item.name === 'style'){
+                const _list = item.value.split(';');
+                if(_list.length){
+                    let styleObj = {};
+                    _list.forEach((s) => {
+                        const _sList = s.split(':');
+                        let key = _sList[0].trim();
+                        let value = _sList[1].trim();
+                        styleObj[key] = value;
+                    })
+                    item.value = styleObj;
+                }
+            }
+            props[item.name] = item.value;
+        })
+    }
+    return Object.keys(props).length > 0 ? JSON.stringify(props) : null;
+}
+
+/**
+ * 生成render函数的执行代码
+ * 实现的效果最终类似于vue的h函数
+ * @param ast
+ *
+ * vue中的h函数 => h('div', { style: { color: 'red' }, '这是div文本' })
+ * 第一个参数为标签名字，第二个参数为标签属性，第三个属性为子节点，子节点可以是一段文本内容，
+ * 也可以是一个html元素节点
+ *
+ * 这里我们定义三个函数：
+ *  1、_c -> 相当于h函数，用于渲染html
+ *  2、_v -> 对文本进行处理，如果文本里有{{name}}这种取值语法，需要做解析处理
+ *  3、_s -> 为JSON.stringify函数，对{{name}}中的变量进行处理
+ */
+export function genRenderCode(ast){
+    // console.log('ast', ast);
+
+    const tag = ast.tag;
+    const props = genProps(ast.attrs);
+    const children = genChildren(ast.children);
+
+    let code =  `_c('${tag}', ${props} ${children})`;
+
+    return code
+}
+
+// 将模板编译成render函数
 export function compileToFunction(template) {
     // 解析成ast语法树
     const ast = parseHTML(template);
-    console.log('ast', ast);
+    const code = genRenderCode(ast);
+    console.log(code);
     return ''
 }
