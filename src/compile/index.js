@@ -113,7 +113,8 @@ export function genRenderCode(ast){
 export function compileToFunction(template) {
     // 解析成ast语法树
     const ast = parseHTML(template);
+    // 生成render函数字符串
     const code = genRenderCode(ast);
-    console.log(code);
-    return ''
+    const render = new Function(`with(this){ return ${code} }`)
+    return render
 }
