@@ -38,6 +38,6 @@ export function initMixin(Vue) {
             }
         }
 
-        mountComponent(vm, el)
+        mountComponent(vm, queryEl)
     }
 }

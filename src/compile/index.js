@@ -13,7 +13,7 @@ export function genTextNode(text){
 
     // 如果不是{{ ... }}形式的内容，直接返回原文本
     if(!defaultTagRE.test(text)){
-        return `'${text}'`
+        return `_v('${text}')`
     }
 
     // 不断的去匹配当前字符串中含有{{...}}形式的内容
@@ -25,13 +25,13 @@ export function genTextNode(text){
     // 顺序放好文本内容
     const words = [];
     while(match  = defaultTagRE.exec(text)){
-        console.log('match:', match)
+        // console.log('match:', match)
         const index = match.index;
 
         if(index > lastIndex){
             words.push(`'${text.slice(lastIndex, index)}'`)
         }
-        words.push(`_s('${match[1].trim()}')`);
+        words.push(`_s(${match[1].trim()})`);
         lastIndex = match.index + match[0].length;
     }
     if(lastIndex < text.length){
