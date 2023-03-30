@@ -1,4 +1,5 @@
 import newArrayPrototype from "./array";
+import Dep               from "./dep.js";
 
 class Observer {
     constructor(data) {
@@ -28,8 +29,14 @@ export function defineReactive(target, key, value) {
     // 如果value还是个对象，就继续劫持
     observe(value);
 
+    // 每个属性都有一个dep
+    let dep = new Dep();
     Object.defineProperty(target, key, {
         get() {
+            // 取值的时候记住是哪个watcher
+            if(Dep.target) {
+                dep.depend();
+            }
             return value;
         },
         set(newValue) {
@@ -39,6 +46,9 @@ export function defineReactive(target, key, value) {
             // 这时也应该代理新设置的对象
             observe(newValue);
             value = newValue;
+
+            // 更新的时候通知所有watcher
+            dep.notify();
         }
     })
 }

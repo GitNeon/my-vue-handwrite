@@ -1,4 +1,5 @@
 import { createVNodeElement, createVNodeText, patch } from "../vdom/index.js";
+import Watcher                                        from "../observe/watcher.js";
 
 export function initLifeCycle(Vue){
     Vue.prototype._update = function(vnode){
@@ -29,5 +30,12 @@ export function initLifeCycle(Vue){
 
 export function mountComponent(vm, el){
     vm.$el = el;
-    vm._update(vm._render());
+
+    const updateComponent = () => {
+        vm._update(vm._render());
+    }
+
+    const watcher = new Watcher(vm, updateComponent, true);
+
+    console.log(watcher)
 }
