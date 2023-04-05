@@ -27,6 +27,10 @@
         el: '#app',
     });
 
+    vm.name = 'aaaa';
+    vm.$nextTick(() => {
+        console.log(document.getElementById('app').innerHTML)
+    })
   </script>
 </body>
 </html>
