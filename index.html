@@ -9,6 +9,7 @@
     <span key="1" style="color: pink">hello!</span>
     <span>{{ age }}</span>
     {{ name }}hello{{ age }}hello
+    <div>爱好: {{ hobby }}</div>
   </div>
   <script src="dist/bundle.vue.js"></script>
   <script>
@@ -27,6 +28,9 @@
         el: '#app',
     });
 
+    setTimeout(() => {
+        vm.hobby.push('100', '100');
+    },1000)
   </script>
 </body>
 </html>

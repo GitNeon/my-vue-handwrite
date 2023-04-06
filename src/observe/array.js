@@ -35,6 +35,8 @@ methods.forEach(method => {
             default:
                 break;
         }
+        // 通知更新
+        ob.dep.notify();
         return res;
     }
 })

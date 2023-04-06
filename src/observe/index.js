@@ -3,7 +3,11 @@ import Dep               from "./dep.js";
 
 class Observer {
     constructor(data) {
-        data.__ob__ = this;
+
+        // 给每个对象增加依赖收集功能
+        this.dep = new Dep();
+
+        // data.__ob__ = this;
         Object.defineProperty(data, '__ob__', {
             value: this,
             enumerable: false
@@ -23,11 +27,23 @@ class Observer {
     }
 }
 
+// 对于数组，需要递归解决依赖收集问题
+function dependArray(value) {
+    if(value) {
+        value.forEach(item => {
+            item.__ob__ && item.__ob__.dep.depend();
+            if(Array.isArray(item)) {
+                dependArray(item);
+            }
+        })
+    }
+}
+
 // 属性劫持方法，这个方法可以被单独使用，所以可以作为公共的方法导出
 // 而不是依赖在Observer类上
 export function defineReactive(target, key, value) {
     // 如果value还是个对象，就继续劫持
-    observe(value);
+    let childObj = observe(value);
 
     // 每个属性都有一个dep
     let dep = new Dep();
@@ -36,6 +52,13 @@ export function defineReactive(target, key, value) {
             // 取值的时候记住是哪个watcher
             if(Dep.target) {
                 dep.depend();
+                // 让数组和对象也进行依赖收集
+                if(childObj) {
+                    childObj.dep.depend();
+                    if(Array.isArray(childObj)) {
+                        dependArray(childObj);
+                    }
+                }
             }
             return value;
         },
