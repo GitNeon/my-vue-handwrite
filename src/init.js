@@ -7,6 +7,7 @@
 import { initState }         from "./state.js";
 import { compileToFunction } from "./compile/index.js";
 import { mountComponent }    from "./lifecycle/init.js";
+import { nextTick } from "./observe/watcher.js";
 
 export function initMixin(Vue) {
     Vue.prototype._init = function (options) {
@@ -40,4 +41,6 @@ export function initMixin(Vue) {
 
         mountComponent(vm, queryEl)
     }
+
+    Vue.prototype.$nextTick = nextTick;
 }
