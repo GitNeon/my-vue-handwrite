@@ -1,4 +1,4 @@
-import Dep from "./dep.js";
+import Dep, { popTarget, pushTarget } from "./dep.js";
 
 /**
  * @Author: fanx
@@ -14,25 +14,35 @@ class Watcher {
      * 构造函数，初始化watcher
      * @param vm 组件实例
      * @param callback 回调函数
-     * @param isRender 是否为一个渲染Watcher
+     * @param options 选项
      */
-    constructor(vm, callback, isRender = false) {
+    constructor(vm, callback, options) {
         this.id = id++;
-        // 保存回调函数
-        this.isRender = isRender;
+        this.vm = vm;
+        this.renderWatcher = options;
         this.getter = callback;
         this.deps = [];
         // 利用set去重
         this.depsId = new Set();
-        this.get()
+        this.lazy = options.lazy;
+        // 为computed使用
+        this.dirty = this.lazy;
+        if(!this.lazy) {
+            this.get();
+        }
     }
-
+    evaluate() {
+        this.value = this.get();
+        this.dirty = false;
+    }
     get() {
         // 让dep记住当前的watcher实例
-        Dep.target = this;
-        this.getter();
+        pushTarget(this);
+        const value = this.getter.call(this.vm);
         // 回调函数执行完毕，清空target
-        Dep.target = null;
+        popTarget();
+        // 返回值,主要是computed使用
+        return value;
     }
 
     addDep(dep) {
@@ -46,9 +56,21 @@ class Watcher {
 
     }
 
+    depend() {
+        for (let i = 0; i < this.deps.length; i++) {
+            this.deps[i].depend();
+        }
+    }
+
     update() {
-        // 重新渲染
-        this.get();
+        // 判断是不是计算属性watcher
+        if(this.lazy) {
+            // 如果依赖的属性变化了，就标识为脏值
+            this.dirty = true;
+        } else {
+            // 重新渲染
+            queueWatcher(this);
+        }
     }
 }
 

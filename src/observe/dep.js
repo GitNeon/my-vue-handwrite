@@ -36,4 +36,17 @@ class Dep {
 // 当每次创建watcher的时候，就让dep记住
 Dep.target = null;
 
+// 记住watcher的时候维护一个数组，这样方便计算属性使用了哪些watcher
+let stack = [];
+
+export function pushTarget(watcher) {
+    stack.push(watcher);
+    Dep.target = watcher;
+}
+
+export function popTarget() {
+    stack.pop();
+    Dep.target = stack[stack.length - 1];
+}
+
 export default Dep;

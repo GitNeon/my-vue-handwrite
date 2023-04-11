@@ -10,6 +10,9 @@
     <span>{{ age }}</span>
     {{ name }}hello{{ age }}hello
     <div>爱好: {{ hobby }}</div>
+    <div>{{ fullName }}</div>
+    <div>{{ fullName }}</div>
+    <div>{{ fullName }}</div>
   </div>
   <script src="dist/bundle.vue.js"></script>
   <script>
@@ -22,14 +25,27 @@
                     code: '100000',
                     city: 'beijing'
                 },
-                hobby: ['sleep', 'play', 'eat', { a: 1 }]
+                hobby: ['sleep', 'play', 'eat', { a: 1 }],
+                firstname: 'xiao',
+                lastname: 'hong',
             }
+        },
+        computed: {
+            fullName: {
+              get() {
+                  console.log('run')
+                  return this.firstname + this.lastname
+              },
+              set(newVal) {
+                  console.log(newVal);
+              }
+          }
         },
         el: '#app',
     });
 
     setTimeout(() => {
-        vm.hobby.push('100', '100');
+        vm.firstname = 'modify';
     },1000)
   </script>
 </body>
