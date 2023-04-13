@@ -1,4 +1,5 @@
 // 标签名
+
 const ncname = '[a-zA-Z_][\\-\\.0-9_a-zA-Z]*';
 const qnameCapture = "((?:" + ncname + ":)?" + ncname + ")";
 
@@ -116,7 +117,7 @@ export function parseHTML(html) {
     while (html) {
         let textEnd = html.indexOf('<');
         // 如果为0，说明是开始标签的尖角号<
-        if ( textEnd === 0 ) {
+        if ( textEnd === 0 && (!html.match(endTag))) {
             // 解析开始标签和属性
             const startTagResult = parseStartTag(html);
             saveStart(startTagResult)

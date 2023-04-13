@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue</title>
+</head>
+<body>
+<div id="app" style="color: red; background-color: skyblue">
+</div>
+<script type="module">
+  import Vue from './index.js'
+  import { compileToFunction } from './compile/index.js'
+  import { patch } from './vdom/patch.js'
+  import { createElement } from './vdom/index.js'
+
+  const vm = new Vue({
+    data () {
+      return {
+        name: 'xiaoming',
+        age: 18,
+        address: {
+          code: '100000',
+          city: 'beijing',
+        },
+        hobby: ['sleep', 'play', 'eat', { a: 1 }],
+        firstname: 'xiao',
+        lastname: 'hong',
+      }
+    },
+    computed: {
+      fullName: {
+        get () {
+          return this.firstname + this.lastname
+        },
+        set (newVal) {
+          console.log(newVal)
+        },
+      },
+    },
+    el: '#app',
+  })
+
+  /* 虚拟节点 diff算法测试 */
+  /*    const render1 = compileToFunction(`<li style="color: red; background: skyblue">{{ name }}</li>`);
+      const vm1 = new Vue({
+        data: { name: 'n1' }
+      })
+      const oldVnode = render1.call(vm1);
+      const el = createElement(oldVnode);
+      document.body.appendChild(el);
+
+      const render2 = compileToFunction(`<li style="background: yellow;"></li>`);
+      const vm2 = new Vue({
+        data: { name: 'n2' }
+      })
+      const newVnode = render2.call(vm2);
+      // console.log(newVnode, oldVnode)
+
+      setTimeout(() => {
+        patch(oldVnode, newVnode);
+      }, 1000)*/
+
+  // 包含子节点的diff算法测试
+  const render1 = compileToFunction(`<ul style="color: red; background: skyblue">
+      <li key="a"></li>
+      <li key="b"></li>
+      <li key="c"></li>
+    </ul>`)
+  const vm1 = new Vue({
+    data: { name: 'n1' },
+  })
+  const oldVnode = render1.call(vm1)
+  const el = createElement(oldVnode)
+  document.body.appendChild(el)
+
+  const render2 = compileToFunction(`<ul style="background: yellow;">
+    <li key="a"></li>
+    <li key="b"></li>
+    <li key="c"></li>
+    <li key="d"></li>
+  </ul>`)
+  const vm2 = new Vue({
+    data: { name: 'n2' },
+  })
+  const newVnode = render2.call(vm2)
+  // console.log(newVnode, oldVnode)
+
+  setTimeout(() => {
+    patch(oldVnode, newVnode)
+  }, 1000)
+</script>
+</body>
+</html>

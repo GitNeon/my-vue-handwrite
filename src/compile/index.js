@@ -69,6 +69,7 @@ export function genProps(attrs){
                 if(_list.length){
                     let styleObj = {};
                     _list.forEach((s) => {
+                        if(s === "") return;
                         const _sList = s.split(':');
                         let key = _sList[0].trim();
                         let value = _sList[1].trim();

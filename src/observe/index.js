@@ -1,4 +1,4 @@
-import newArrayPrototype from "./array";
+import newArrayPrototype from "./array.js";
 import Dep               from "./dep.js";
 
 class Observer {

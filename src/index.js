@@ -3,7 +3,7 @@
  * @Date: 2023年03月06日 11:28
  * @Description: vue
  */
-import { initMixin }     from "./init";
+import { initMixin }     from "./init.js";
 import { initLifeCycle } from "./lifecycle/init.js";
 
 /**
