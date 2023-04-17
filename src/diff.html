@@ -62,9 +62,10 @@
 
   // 包含子节点的diff算法测试
   const render1 = compileToFunction(`<ul style="color: red; background: skyblue">
-      <li key="a"></li>
-      <li key="b"></li>
-      <li key="c"></li>
+      <li key="a">a</li>
+      <li key="b">b</li>
+      <li key="c">c</li>
+      <li key="d">d</li>
     </ul>`)
   const vm1 = new Vue({
     data: { name: 'n1' },
@@ -74,10 +75,12 @@
   document.body.appendChild(el)
 
   const render2 = compileToFunction(`<ul style="background: yellow;">
-    <li key="a"></li>
-    <li key="b"></li>
-    <li key="c"></li>
-    <li key="d"></li>
+    <li key="b">b</li>
+    <li key="m">m</li>
+    <li key="a">a</li>
+    <li key="p">p</li>
+    <li key="c">c</li>
+    <li key="q">q</li>
   </ul>`)
   const vm2 = new Vue({
     data: { name: 'n2' },

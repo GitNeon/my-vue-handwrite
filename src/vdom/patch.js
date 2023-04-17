@@ -141,14 +141,98 @@ export function updateChildren(el, oldChildren, newChildren) {
     let newStartVnode = newChildren[0];
 
     let oldEndVnode = oldChildren[oldEndIndex];
-    let newEndVnode = oldChildren[newEndIndex];
+    let newEndVnode = newChildren[newEndIndex];
 
-    // 双方只要有一个头指针大于尾指针，则停止运行
+    const map = makeIndexByKey(oldChildren);
+
+    // 针对一些场景进行优化判断
+    // 采用双指针算法实现
+    // 当起始指针小于终止指针时，循环判断
     while (oldStartIndex < oldEndIndex && newStartIndex <= newEndIndex) {
+        if(!oldStartVnode) {
+            oldStartVnode = oldChildren[++oldStartIndex];
+        }else if(!oldEndVnode) {
+            oldEndVnode = oldChildren[--oldEndIndex];
+            // 头比较 如果是相同节点
+        }else if(isSameVNode(oldStartVnode, newStartVnode)) {
+            // 递归比较子节点
+            patchVnode(oldStartVnode, newStartVnode)
+            // 比较完移动到下一个节点
+            oldStartVnode = oldChildren[++oldStartIndex];
+            newStartVnode = newChildren[++newStartIndex];
+        }else if(isSameVNode(oldEndVnode, newEndVnode)){
+            // 尾比较 如果是相同节点
+            // 递归比较子节点
+            patchVnode(oldEndVnode, newEndVnode)
+            // 比较完移动到下一个节点
+            oldEndVnode = oldChildren[--oldEndIndex];
+            newEndVnode = newChildren[--newEndIndex];
+        }else if(isSameVNode(oldEndVnode, newStartVnode)) {
+           // 交叉比对,如果老的最后一个节点和新的开头节点一样，那么就把老的节点插入到开头去
+           patchVnode(oldEndVnode, newStartVnode);
+           el.insertBefore(oldEndVnode.realElement, oldStartVnode.realElement);
+           // 老的指针往前移动
+           oldEndVnode = oldChildren[--oldEndIndex];
+           // 新的往后移动
+           newStartVnode = newChildren[++newStartIndex];
+        }else if(isSameVNode(oldStartVnode, newEndVnode)) {
+            // 交叉比对
+            patchVnode(oldStartVnode, newEndVnode);
+            el.insertBefore(oldStartVnode.realElement, oldEndVnode.realElement.nextSibling);
+            oldStartVnode = oldChildren[++oldStartIndex];
+            newEndVnode = newChildren[--newEndIndex];
+        }else {
+            // 乱序比对
+            // 根据老的做一个映射关系表,用新的去找，找到则移动,找不到则添加
+            // 最后多余的则删除
+            let moveIndex = map[newStartVnode.key];
+            // 找到对应的节点，则复用
+            if(moveIndex !== undefined) {
+                let moveVnode = oldChildren[moveIndex];
+                el.insertBefore(moveVnode.realElement, oldStartVnode.realElement);
+                oldChildren[moveIndex] = undefined; // 表示节点移走了
+                patchVnode(moveVnode, newStartVnode);
+            }else {
+                el.insertBefore(createElement(newStartVnode), oldStartVnode.realElement);
+            }
 
+            newStartVnode = newChildren[++newStartIndex];
+        }
     }
+
+    // 插入新节点
+    if(newStartIndex <= newEndIndex) {
+        for (let i = newStartIndex; i <= newEndIndex ; i++) {
+            let childEl = createElement(newChildren[i]);
+            // 判断是在前面追加还是后面追加
+            let anchor = newChildren[newEndIndex + 1] ?
+              newChildren[newEndIndex + 1].realElement : null;
+            el.insertBefore(childEl, anchor);
+        }
+    }
+
+    // 移除旧节点
+    if(oldStartIndex <= oldEndIndex) {
+        for (let i = oldStartIndex; i <= oldEndIndex ; i++) {
+            let childEl = oldChildren[i].realElement;
+            if(oldChildren[i]) {
+                let childEl = oldChildren[i].realElement;
+                el.removeChild(childEl);
+            }
+        }
+    }
+
 }
 
 export function isSameVNode(vnode1, vnode2){
     return vnode1.tag === vnode2.tag && vnode1.key === vnode2.key;
+}
+
+// 生成映射表
+function makeIndexByKey(children) {
+    const map = {};
+    children.forEach((child, index) => {
+        map[child.key] = index;
+    })
+    return map;
 }
